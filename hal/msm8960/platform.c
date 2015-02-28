@@ -558,7 +558,7 @@ int platform_switch_voice_call_device_post(void *platform,
 
             if (acdb_rx_id > 0 || acdb_tx_id > 0) {
                 ret = my_data->csd_enable_device(acdb_rx_id, acdb_tx_id,
-                                                    my_data->adev->acdb_settings);
+                                                    (my_data->adev->acdb_settings & ~DMIC_FLAG));
                 if (ret < 0) {
                     ALOGE("%s: csd_enable_device, failed, error %d",
                           __func__, ret);
