@@ -1112,6 +1112,11 @@ int platform_set_snd_device_name(snd_device_t snd_device __unused,
     return -ENOSYS;
 }
 
+bool platform_use_small_buffer(audio_offload_info_t* info)
+{
+    return OFFLOAD_USE_SMALL_BUFFER;
+}
+
 bool platform_check_and_set_codec_backend_cfg(struct audio_device* adev, struct audio_usecase *usecase) {
     return false;
 }
