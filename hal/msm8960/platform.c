@@ -129,10 +129,13 @@ static const char * const device_table[SND_DEVICE_MAX] = {
     [SND_DEVICE_OUT_SPEAKER] = "speaker",
     [SND_DEVICE_OUT_SPEAKER_REVERSE] = "speaker-reverse",
     [SND_DEVICE_OUT_HEADPHONES] = "headphones",
+    [SND_DEVICE_OUT_LINE] = "line",
     [SND_DEVICE_OUT_SPEAKER_AND_HEADPHONES] = "speaker-and-headphones",
+    [SND_DEVICE_OUT_SPEAKER_AND_LINE] = "speaker-and-line",
     [SND_DEVICE_OUT_VOICE_HANDSET] = "voice-handset",
     [SND_DEVICE_OUT_VOICE_SPEAKER] = "voice-speaker",
     [SND_DEVICE_OUT_VOICE_HEADPHONES] = "voice-headphones",
+    [SND_DEVICE_OUT_VOICE_LINE] = "voice-line",
     [SND_DEVICE_OUT_HDMI] = "hdmi",
     [SND_DEVICE_OUT_SPEAKER_AND_HDMI] = "speaker-and-hdmi",
     [SND_DEVICE_OUT_BT_SCO] = "bt-sco-headset",
@@ -175,10 +178,13 @@ static const int acdb_device_table[SND_DEVICE_MAX] = {
     [SND_DEVICE_OUT_SPEAKER] = 14,
     [SND_DEVICE_OUT_SPEAKER_REVERSE] = 14,
     [SND_DEVICE_OUT_HEADPHONES] = 10,
+    [SND_DEVICE_OUT_LINE] = 10,
     [SND_DEVICE_OUT_SPEAKER_AND_HEADPHONES] = 10,
+    [SND_DEVICE_OUT_SPEAKER_AND_LINE] = 10,
     [SND_DEVICE_OUT_VOICE_HANDSET] = 7,
     [SND_DEVICE_OUT_VOICE_SPEAKER] = 14,
     [SND_DEVICE_OUT_VOICE_HEADPHONES] = 9,
+    [SND_DEVICE_OUT_VOICE_LINE] = 9,
     [SND_DEVICE_OUT_HDMI] = 18,
     [SND_DEVICE_OUT_SPEAKER_AND_HDMI] = 14,
     [SND_DEVICE_OUT_BT_SCO] = 22,
@@ -735,6 +741,9 @@ snd_device_t platform_get_output_snd_device(void *platform, audio_devices_t devi
         if (devices == (AUDIO_DEVICE_OUT_WIRED_HEADPHONE |
                         AUDIO_DEVICE_OUT_SPEAKER)) {
             snd_device = SND_DEVICE_OUT_SPEAKER_AND_HEADPHONES;
+        } else if (devices == (AUDIO_DEVICE_OUT_LINE |
+                               AUDIO_DEVICE_OUT_SPEAKER)) {
+            snd_device = SND_DEVICE_OUT_SPEAKER_AND_LINE;
         } else if (devices == (AUDIO_DEVICE_OUT_WIRED_HEADSET |
                                AUDIO_DEVICE_OUT_SPEAKER)) {
             snd_device = SND_DEVICE_OUT_SPEAKER_AND_HEADPHONES;
@@ -761,6 +770,8 @@ snd_device_t platform_get_output_snd_device(void *platform, audio_devices_t devi
     if (devices & AUDIO_DEVICE_OUT_WIRED_HEADPHONE ||
         devices & AUDIO_DEVICE_OUT_WIRED_HEADSET) {
         snd_device = SND_DEVICE_OUT_HEADPHONES;
+    } else if (devices & AUDIO_DEVICE_OUT_LINE) {
+        snd_device = SND_DEVICE_OUT_LINE;
     } else if (devices & AUDIO_DEVICE_OUT_SPEAKER) {
         if (adev->speaker_lr_swap)
             snd_device = SND_DEVICE_OUT_SPEAKER_REVERSE;
@@ -814,7 +825,8 @@ snd_device_t platform_get_input_snd_device(void *platform, audio_devices_t out_d
         }
         if (adev->voice.tty_mode != TTY_MODE_OFF) {
             if (out_device & AUDIO_DEVICE_OUT_WIRED_HEADPHONE ||
-                out_device & AUDIO_DEVICE_OUT_WIRED_HEADSET) {
+                out_device & AUDIO_DEVICE_OUT_WIRED_HEADSET ||
++               out_device & AUDIO_DEVICE_OUT_LINE) {
                 switch (adev->voice.tty_mode) {
                 case TTY_MODE_FULL:
                     snd_device = SND_DEVICE_IN_VOICE_TTY_FULL_HEADSET_MIC;
@@ -831,8 +843,7 @@ snd_device_t platform_get_input_snd_device(void *platform, audio_devices_t out_d
                 goto exit;
             }
         }
-        if (out_device & AUDIO_DEVICE_OUT_EARPIECE ||
-            out_device & AUDIO_DEVICE_OUT_WIRED_HEADPHONE) {
+        if (out_device & AUDIO_DEVICE_OUT_EARPIECE) {
             if (my_data->fluence_type == FLUENCE_NONE ||
                 my_data->fluence_in_voice_call == false || mode == AUDIO_MODE_IN_COMMUNICATION) {
                 snd_device = SND_DEVICE_IN_HANDSET_MIC;
@@ -844,7 +855,9 @@ snd_device_t platform_get_input_snd_device(void *platform, audio_devices_t out_d
             snd_device = SND_DEVICE_IN_VOICE_HEADSET_MIC;
         } else if (out_device & AUDIO_DEVICE_OUT_ALL_SCO) {
             snd_device = SND_DEVICE_IN_BT_SCO_MIC ;
-        } else if (out_device & AUDIO_DEVICE_OUT_SPEAKER) {
+        } else if (out_device & AUDIO_DEVICE_OUT_SPEAKER ||
++                out_device & AUDIO_DEVICE_OUT_WIRED_HEADPHONE ||
++                out_device & AUDIO_DEVICE_OUT_LINE) {
             if (mode == AUDIO_MODE_IN_COMMUNICATION)
                 snd_device = SND_DEVICE_IN_VOICE_SPEAKER_MIC;
             else if (my_data->fluence_type != FLUENCE_NONE &&
@@ -937,7 +950,8 @@ snd_device_t platform_get_input_snd_device(void *platform, audio_devices_t out_d
             snd_device = SND_DEVICE_IN_HEADSET_MIC;
         } else if (out_device & AUDIO_DEVICE_OUT_SPEAKER) {
             snd_device = SND_DEVICE_IN_SPEAKER_MIC;
-        } else if (out_device & AUDIO_DEVICE_OUT_WIRED_HEADPHONE) {
+        } else if (out_device & AUDIO_DEVICE_OUT_WIRED_HEADPHONE ||
+                   out_device & AUDIO_DEVICE_OUT_LINE) {
             snd_device = SND_DEVICE_IN_HANDSET_MIC;
         } else if (out_device & AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET) {
             snd_device = SND_DEVICE_IN_BT_SCO_MIC;
